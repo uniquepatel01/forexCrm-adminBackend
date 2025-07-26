@@ -3,6 +3,8 @@ const dotenv = require('dotenv');
 const cors = require('cors');
 const connectDB = require('./config/db')
 
+const adminRoutes = require('./routes/adminRoute')
+
 dotenv.config();
 connectDB();
 
@@ -18,6 +20,8 @@ app.use(express.urlencoded({ extended: true }));
 app.get('/', (req, res) => {
   res.send('Welcome to the API!');
 });
+
+app.use('/api/admin', adminRoutes);
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
