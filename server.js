@@ -4,6 +4,8 @@ const cors = require('cors');
 const connectDB = require('./config/db')
 
 const adminRoutes = require('./routes/adminRoute')
+const agentRoutes = require('./routes/agentRoute')
+const forexRoutes = require('./routes/forexRoute')
 
 dotenv.config();
 connectDB();
@@ -22,6 +24,9 @@ app.get('/', (req, res) => {
 });
 
 app.use('/api/admin', adminRoutes);
+
+app.use('/api/agent', agentRoutes);
+app.use('/api/forex', forexRoutes);
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
