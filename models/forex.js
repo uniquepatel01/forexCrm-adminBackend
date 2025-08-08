@@ -20,7 +20,7 @@ const forexSchema = new mongoose.Schema({
   status: {
     type: String,
     enum: [
-      "converted", "demo", "dnp", "wrong number", "call me later",
+      "converted", "demo", "dnp","future", "wrong number", "call me later",
       "busy", "out of station", "not interested", "dormants", "emails"
     ]
   },

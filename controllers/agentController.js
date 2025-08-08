@@ -27,11 +27,18 @@ exports.registerAgent = async (req, res) => {
   });
 };
 
-// Agent login
+// Overwrite login to also prevent trashed agents from logging in
 exports.loginAgent = async (req, res) => {
   const { email, password } = req.body;
   const agent = await Agent.findOne({ email });
   if (!agent) return res.status(400).json({ message: 'Invalid email or password' });
+
+  if (agent.isTrashed) {
+    return res.status(403).json({ message: 'Your account is in trash. Contact administrator.' });
+  }
+  if (agent.isBlocked) {
+    return res.status(403).json({ message: 'Your account is blocked. Contact administrator.' });
+  }
 
   const isMatch = await bcrypt.compare(password, agent.password);
   if (!isMatch) return res.status(400).json({ message: 'Invalid credentials' });
@@ -45,8 +52,62 @@ exports.loginAgent = async (req, res) => {
       name: agent.name,
       email: agent.email,
       crmType: agent.crmType,
+      isBlocked: agent.isBlocked,
+      isTrashed: agent.isTrashed,
     },
   });
+};
+
+// Block an agent (admin only)
+exports.blockAgent = async (req, res) => {
+  const { id } = req.params;
+  const agent = await Agent.findById(id);
+  if (!agent) return res.status(404).json({ message: 'Agent not found' });
+  if (agent.isBlocked) return res.status(400).json({ message: 'Agent already blocked' });
+  agent.isBlocked = true;
+  await agent.save();
+  res.json({ message: 'Agent blocked successfully' });
+};
+
+// Unblock an agent (admin only)
+exports.unblockAgent = async (req, res) => {
+  const { id } = req.params;
+  const agent = await Agent.findById(id);
+  if (!agent) return res.status(404).json({ message: 'Agent not found' });
+  if (!agent.isBlocked) return res.status(400).json({ message: 'Agent is not blocked' });
+  agent.isBlocked = false;
+  await agent.save();
+  res.json({ message: 'Agent unblocked successfully' });
+};
+
+// Move agent to trash (admin only)
+exports.trashAgent = async (req, res) => {
+  const { id } = req.params;
+  const agent = await Agent.findById(id);
+  if (!agent) return res.status(404).json({ message: 'Agent not found' });
+  if (agent.isTrashed) return res.status(400).json({ message: 'Agent already in trash' });
+  agent.isTrashed = true;
+  agent.deletedAt = new Date();
+  await agent.save();
+  res.json({ message: 'Agent moved to trash' });
+};
+
+// Restore agent from trash (admin only)
+exports.restoreAgent = async (req, res) => {
+  const { id } = req.params;
+  const agent = await Agent.findById(id);
+  if (!agent) return res.status(404).json({ message: 'Agent not found' });
+  if (!agent.isTrashed) return res.status(400).json({ message: 'Agent is not in trash' });
+  agent.isTrashed = false;
+  agent.deletedAt = null;
+  await agent.save();
+  res.json({ message: 'Agent restored from trash' });
+};
+
+// List all trashed agents (admin only)
+exports.getTrashedAgents = async (_req, res) => {
+  const trashed = await Agent.find({ isTrashed: true }).select('-password');
+  res.json(trashed);
 };
 
 // Update agent profile
