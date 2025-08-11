@@ -92,17 +92,7 @@ exports.trashAgent = async (req, res) => {
   res.json({ message: 'Agent moved to trash' });
 };
 
-// Restore agent from trash (admin only)
-exports.restoreAgent = async (req, res) => {
-  const { id } = req.params;
-  const agent = await Agent.findById(id);
-  if (!agent) return res.status(404).json({ message: 'Agent not found' });
-  if (!agent.isTrashed) return res.status(400).json({ message: 'Agent is not in trash' });
-  agent.isTrashed = false;
-  agent.deletedAt = null;
-  await agent.save();
-  res.json({ message: 'Agent restored from trash' });
-};
+
 
 // List all trashed agents (admin only)
 exports.getTrashedAgents = async (_req, res) => {

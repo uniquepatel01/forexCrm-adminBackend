@@ -9,6 +9,7 @@ const forexRoutes = require('./routes/forexRoute')
 const dashboardRoutes = require('./routes/dashboardRoute')
 const reportRoutes = require('./routes/reportRoute')
 const uploadRoutes = require('./routes/uploadRoute')
+const clientsRoute = require('./routes/clientsRoute')
 
 dotenv.config();
 connectDB();
@@ -31,6 +32,7 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/agent', agentRoutes);
 app.use('/api/forex', forexRoutes);
 app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/clients', clientsRoute)
 app.use('/api/reports', reportRoutes);
 app.use('/api/upload', uploadRoutes);
 
