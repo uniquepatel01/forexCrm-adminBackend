@@ -1,24 +1,25 @@
 const Forex = require('../models/forex');
 
-// Total number of leads
-exports.getTotalLeads = async (req, res) => {
+// Total Busy Leads
+exports.getTotalBusy = async (req, res)=>{
     try {
-        const total = await Forex.countDocuments();
-        res.json({ totalLeads: total });
-    } catch (err) {
-        res.status(500).json({ message: err.message });
+        const count = await Forex.countDocuments({status:'busy'})
+        res.json({totalBusy:count})
+    } catch (err){
+        res.status(500).json({message: err.message})
     }
-};
+}
 
-// Leads assigned to an agent
-exports.getLeadsWithAgent = async (req, res) => {
+//total Dnp Leads
+exports.getTotalDnp = async (req, res)=>{
     try {
-        const count = await Forex.countDocuments({ assignedTo: { $ne: null } });
-        res.json({ leadsWithAgent: count });
-    } catch (err) {
-        res.status(500).json({ message: err.message });
+        const count = await Forex.countDocuments({status:'dnp'})
+        res.json({totalDnp:count})
+    } catch (err){
+        res.status(500).json({message: err.message})
     }
-};
+}
+
 
 // Total converted leads
 exports.getTotalConverted = async (req, res) => {
@@ -30,32 +31,13 @@ exports.getTotalConverted = async (req, res) => {
     }
 };
 
-// Converted leads assigned to an agent
-exports.getConvertedWithAgent = async (req, res) => {
-    try {
-        const count = await Forex.countDocuments({ status: 'converted', assignedTo: { $ne: null } });
-        res.json({ convertedWithAgent: count });
-    } catch (err) {
-        res.status(500).json({ message: err.message });
-    }
-};
 
-// All analytics in one endpoint
-exports.getAllAnalytics = async (req, res) => {
+// Total Demo leads
+exports.getTotalDemo = async (req, res) => {
     try {
-        const [totalLeads, leadsWithAgent, totalConverted, convertedWithAgent] = await Promise.all([
-            Forex.countDocuments(),
-            Forex.countDocuments({ assignedTo: { $ne: null } }),
-            Forex.countDocuments({ status: 'converted' }),
-            Forex.countDocuments({ status: 'converted', assignedTo: { $ne: null } })
-        ]);
-        res.json({
-            totalLeads,
-            leadsWithAgent,
-            totalConverted,
-            convertedWithAgent
-        });
-    } catch (err) {
-        res.status(500).json({ message: err.message });
+        const count = await Forex.countDocuments({status: 'demo'});
+        res.json({ totalDemo: count})
+    } catch (err){
+        res.status(500).json({message: err.message})
     }
-};
+}

@@ -25,4 +25,6 @@ router.get("/dnp", protectAdmin, getTotalDnp);
 router.get("/dormants", protectAdmin, getTotalDormants);
 router.get("emails", protectAdmin, getTotalEmails);
 router.get("futureclients", protectAdmin, getTotalFutureLeads);
-router.get("/notinterested", protedaend)
+router.get("/notinterested", protectAdmin, getTotalNotInterested);
+router.get('/outofstation', protectAdmin, getTotalOutofStation);
+router.get('/wrongnumber', protectAdmin, getTotalWrongNumber)
