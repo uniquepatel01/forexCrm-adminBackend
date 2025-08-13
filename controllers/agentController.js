@@ -1,5 +1,7 @@
 const Agent = require('../models/Agent');
 const bcrypt = require('bcryptjs');
+const Forex = require('../models/forex');
+
 
 exports.registerAgent = async (req, res) => {
   const { name, email, password, crmType } = req.body;
@@ -123,4 +125,71 @@ exports.updateAgentProfile = async (req, res) => {
       crmType: agent.crmType,
     },
   });
+};
+
+// Assign one unassigned lead to the requesting agent atomically
+exports.fetchLeadForAgent = async (req, res) => {
+  try {
+    const requester = req.agent;
+    const agentId = requester?._id || requester?.id;
+    if (!agentId) return res.status(401).json({ message: 'Not authorized' });
+
+    // Ensure agent is allowed
+    const agent = await Agent.findById(agentId);
+    if (!agent) return res.status(404).json({ message: 'Agent not found' });
+    if (agent.isTrashed) return res.status(403).json({ message: 'Your account is in trash. Contact administrator.' });
+    if (agent.isBlocked) return res.status(403).json({ message: 'Your account is blocked. Contact administrator.' });
+
+    // Atomically pick one unassigned lead and assign to this agent
+    const assignedLead = await Forex.findOneAndUpdate(
+      { assignedTo: null },
+      { $set: { assignedTo: String(agentId), updatedAt: new Date() } },
+      { sort: { _id: 1 }, returnDocument: 'after' }
+    );
+
+    if (!assignedLead) {
+      return res.status(404).json({ message: 'No unassigned leads available' });
+    }
+
+    return res.json({ message: 'Lead assigned successfully', lead: assignedLead });
+  } catch (error) {
+    return res.status(500).json({ message: 'Failed to fetch lead', error: error.message });
+  }
+};
+
+// Get leads assigned to the authenticated agent
+exports.getMyLeads = async (req, res) => {
+  try {
+    const requester = req.agent;
+    const agentId = requester?._id || requester?.id;
+    if (!agentId) return res.status(401).json({ message: 'Not authorized' });
+
+    const { status } = req.query;
+    const criteria = { assignedTo: String(agentId) };
+    if (status && typeof status === 'string') {
+      criteria.status = status;
+    }
+
+    const leads = await Forex.find(criteria);
+    return res.json(leads);
+  } catch (error) {
+    return res.status(500).json({ message: 'Failed to fetch leads', error: error.message });
+  }
+};
+
+// Admin: get leads assigned to a specific agent
+exports.getAgentLeads = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.query;
+    const criteria = { assignedTo: String(id) };
+    if (status && typeof status === 'string') {
+      criteria.status = status;
+    }
+
+    const leads = await Forex.find(criteria);
+    return res.json(leads);
+  } catch (error) {
+    return res.status(500).json({ message: 'Failed to fetch agent leads', error: error.message });
+  }
 };

@@ -1,115 +1,56 @@
-const Forex = require('../models/forex'); 
+const Forex = require('../models/forex');
 
-
-
-// Total converted leads
-exports.getTotalConverted = async (req, res) => {
+// Generic function to get total leads by status
+exports.getTotalLeadsByStatus = async (req, res) => {
     try {
-        const count = await Forex.countDocuments({ status: 'converted' });
-        res.json({ totalConverted: count });
+        const { status } = req.params;
+
+        // Validate status parameter
+        const validStatuses = [
+            'converted', 'demo', 'future', 'not interested', 'dnp',
+            'dormants', 'busy', 'out of station', 'call me later',
+            'emails', 'wrong number'
+        ];
+
+        if (!validStatuses.includes(status)) {
+            return res.status(400).json({
+                message: 'Invalid status',
+                validStatuses
+            });
+        }
+
+        const count = await Forex.countDocuments({ status });
+
+        // Create response key based on status
+        const responseKey = `total${status.charAt(0).toUpperCase() + status.slice(1).replace(/\s+/g, '')}`;
+
+        res.json({ [responseKey]: count });
     } catch (err) {
         res.status(500).json({ message: err.message });
     }
 };
 
-// Total Demo leads
-exports.getTotalDemo = async (req, res) => {
+// Get all status counts in a single request
+exports.getAllStatusCounts = async (req, res) => {
     try {
-        const count = await Forex.countDocuments({status: 'demo'});
-        res.json({ totalDemo: count})
-    } catch (err){
-        res.status(500).json({message: err.message})
-    }
-}
+        const statuses = [
+            'converted', 'demo', 'future', 'not interested', 'dnp',
+            'dormants', 'busy', 'out of station', 'call me later',
+            'emails', 'wrong number'
+        ];
 
-//total futureLeads
-exports.getTotalFutureLeads = async (req, res) =>{
-    try {
-        const count = await Forex.countDocuments({status: 'future'})
-        res.json({totalFutureLeads: count})
-    } catch (err){
-        res.status(500).json({message: err.message})
-    }
-}
+        const counts = {};
 
-//total NotInterested Leads
-exports.getTotalNotInterested = async (req, res)=>{
-    try {
-        const count = await Forex.countDocuments({status:'not interested'})
-        res.json({totalNotInterest:count})
-    } catch (err){
-        res.status(500).json({message: err.message})
-    }
-}
+        // Get counts for all statuses
+        for (const status of statuses) {
+            const count = await Forex.countDocuments({ status });
+            const responseKey = `total${status.charAt(0).toUpperCase() + status.slice(1).replace(/\s+/g, '')}`;
+            counts[responseKey] = count;
+        }
 
-//total Dnp Leads
-exports.getTotalDnp = async (req, res)=>{
-    try {
-        const count = await Forex.countDocuments({status:'dnp'})
-        res.json({totalDnp:count})
-    } catch (err){
-        res.status(500).json({message: err.message})
+        res.json(counts);
+    } catch (err) {
+        res.status(500).json({ message: err.message });
     }
-}
-
-// total Dormants Leads
-exports.getTotalDormants = async (req, res)=>{
-    try {
-        const count = await Forex.countDocuments({status:'dormants'})
-        res.json({totalDormants:count})
-    } catch (err){
-        res.status(500).json({message: err.message})
-    }
-}
-
-// Total Busy Leads
-exports.getTotalBusy = async (req, res)=>{
-    try {
-        const count = await Forex.countDocuments({status:'busy'})
-        res.json({totalBusy:count})
-    } catch (err){
-        res.status(500).json({message: err.message})
-    }
-}
-
-// Total Out of Station Leads 
-exports.getTotalOutofStation = async (req, res)=>{
-    try {
-        const count = await Forex.countDocuments({status:'out of station'})
-        res.json({totalOutofStation:count})
-    } catch (err){
-        res.status(500).json({message: err.message})
-    }
-}
-
-// Total Call me later Leads
-exports.getTotalCallMeLater = async (req, res)=>{
-    try {
-        const count = await Forex.countDocuments({status:'call me later'})
-        res.json({totalCallMeLater:count})
-    } catch (err){
-        res.status(500).json({message: err.message})
-    }
-}
-
-//total emails leads
-
-exports.getTotalEmails = async (req, res)=>{
-    try {
-        const count = await Forex.countDocuments({status:'emails'})
-        res.json({totalEmails:count})
-    } catch (err){
-        res.status(500).json({message: err.message})
-    }
-}
-
-//total wrong number leads
-exports.getTotalWrongNumber = async (req, res)=>{
-    try {
-        const count = await Forex.countDocuments({status : 'wrong number'})
-        res.json({totalWrongNumber:count})
-    } catch (err){
-        res.status(500).json({message: err.message})
-    }
-}
+};
 
