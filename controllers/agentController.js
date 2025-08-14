@@ -1,10 +1,11 @@
 const Agent = require('../models/Agent');
 const bcrypt = require('bcryptjs');
 const Forex = require('../models/forex');
+const jwt = require('jsonwebtoken');
 
 
 exports.registerAgent = async (req, res) => {
-  const { name, email, password, crmType } = req.body;
+  const { name, email, password, crmType, number, joining, address, gender } = req.body;
 
   const exists = await Agent.findOne({ email });
   if (exists) return res.status(400).json({ message: 'Agent already exists' });
@@ -16,6 +17,10 @@ exports.registerAgent = async (req, res) => {
     email,
     password: hashedPassword,
     crmType,
+    number,
+    joining,
+    address,
+    gender
   });
 
   res.status(201).json({
@@ -25,6 +30,9 @@ exports.registerAgent = async (req, res) => {
       name: agent.name,
       email: agent.email,
       crmType: agent.crmType,
+      number: agent.number,
+      joining: agent.joining,
+      gender: agent.gender
     },
   });
 };
@@ -45,8 +53,8 @@ exports.loginAgent = async (req, res) => {
   const isMatch = await bcrypt.compare(password, agent.password);
   if (!isMatch) return res.status(400).json({ message: 'Invalid credentials' });
 
-  const jwt = require('jsonwebtoken');
-  const token = jwt.sign({ id: agent._id }, process.env.JWT_SECRET);
+
+  const token = jwt.sign({ id: agent._id, version: agent.tokenVersion || 0 }, process.env.JWT_SECRET);
   res.json({
     token,
     agent: {
@@ -191,5 +199,33 @@ exports.getAgentLeads = async (req, res) => {
     return res.json(leads);
   } catch (error) {
     return res.status(500).json({ message: 'Failed to fetch agent leads', error: error.message });
+  }
+};
+
+// get All Agent list
+
+exports.getAllAgent = async (req, res) => {
+  try {
+    const agents = await Agent.find({}, { password: 0 }); // exclude password field
+    res.json(agents);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// for Specific agent 
+
+exports.getAgent = async (req, res) => {
+
+  try {
+    const agent = await Agent.findById(req.params.id, { password: 0 });
+
+    if (!agent) {
+      return res.status(404).json({ message: "Agent not found" });
+    }
+
+    res.json(agent);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
   }
 };

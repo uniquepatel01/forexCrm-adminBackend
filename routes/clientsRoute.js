@@ -7,9 +7,9 @@ const {
 } = require("../controllers/clientsController");
 
 // Get all status counts in one request
-router.get("/all", protectAdmin, getAllStatusCounts);
+router.get("/all", getAllStatusCounts);
 
 // Get count for specific status using parameter
-router.get("/:status", protectAdmin, getTotalLeadsByStatus);
+router.get("/:status", getTotalLeadsByStatus);
 
 module.exports = router;

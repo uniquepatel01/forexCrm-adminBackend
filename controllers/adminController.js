@@ -12,9 +12,11 @@ const loginAdmin = async (req, res) => {
   const isMatch = await bcrypt.compare(password, admin.password);
   if (!isMatch) return res.status(400).json({ message: 'Invalid credentials' });
 
-  const token = jwt.sign({ id: admin._id }, process.env.JWT_SECRET);
+  const token = jwt.sign({ id: admin._id, version: admin.tokenVersion || 0 }, process.env.JWT_SECRET);
   res.json({ token, admin: { id: admin._id, name: admin.name, email: admin.email } });
 };
+
+
 
 // Update profile
 const updateAdminProfile = async (req, res) => {
@@ -38,4 +40,13 @@ const updateAdminProfile = async (req, res) => {
   });
 };
 
-module.exports = { loginAdmin, updateAdminProfile };
+// Logout admin: bump tokenVersion to invalidate all tokens
+const logoutAdmin = async (req, res) => {
+  const admin = await Admin.findById(req.admin.id);
+  if (!admin) return res.status(404).json({ message: 'Admin not found' });
+  admin.tokenVersion = (admin.tokenVersion || 0) + 1;
+  await admin.save();
+  res.json({ message: 'Logged out successfully' });
+};
+
+module.exports = { loginAdmin, updateAdminProfile, logoutAdmin };
