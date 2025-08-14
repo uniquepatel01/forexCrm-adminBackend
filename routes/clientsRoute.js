@@ -1,32 +1,15 @@
 const express = require('express');
 const router = express.Router();
-const {protectAdmin, protectAgent} = require('../middlewares/authMiddleware');
+const { protectAdmin, protectAgent } = require('../middlewares/authMiddleware');
 const {
-    getTotalConverted,
-    getTotalBusy,
-    getTotalCallMeLater,
-    getTotalDemo,
-    getTotalDnp,
-    getTotalDormants,
-    getTotalEmails,
-    getTotalFutureLeads,
-    getTotalNotInterested,
-    getTotalOutofStation,
-    getTotalWrongNumber
+    getTotalLeadsByStatus,
+    getAllStatusCounts
+} = require("../controllers/clientsController");
 
-}= require("../controllers/clientsController");
+// Get all status counts in one request
+router.get("/all", getAllStatusCounts);
 
-
-router.get("/converted", protectAdmin, getTotalConverted);
-router.get("/busy", protectAdmin, getTotalBusy);
-router.get("/callmelater", protectAdmin, getTotalCallMeLater);
-router.get("/demo", protectAdmin, getTotalDemo );
-router.get("/dnp", protectAdmin, getTotalDnp);
-router.get("/dormants", protectAdmin, getTotalDormants);
-router.get("emails", protectAdmin, getTotalEmails);
-router.get("futureclients", protectAdmin, getTotalFutureLeads);
-router.get("/notinterested", protectAdmin, getTotalNotInterested);
-router.get('/outofstation', protectAdmin, getTotalOutofStation);
-router.get('/wrongnumber', protectAdmin, getTotalWrongNumber);
+// Get count for specific status using parameter
+router.get("/:status", getTotalLeadsByStatus);
 
 module.exports = router;

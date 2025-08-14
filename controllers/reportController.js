@@ -168,4 +168,89 @@ exports.getYearlyReport = async (req, res) => {
     } catch (err) {
         res.status(500).json({ message: err.message });
     }
+};
+
+// ---------------- Agent-specific reports ----------------
+
+async function getCountsForRangeAndAgent(range, agentId) {
+    const assignedFilter = agentId ? { assignedTo: String(agentId) } : {};
+    const dateFilter = { updatedAt: range };
+
+    const criteria = (status) => ({ ...assignedFilter, ...(status ? { status } : {}), ...dateFilter });
+
+    const [totalLeads, converted, dnp, demo, busy, notInterested, callMeLater, outOfStation, wrongNumber, dormant, emails] = await Promise.all([
+        Forex.countDocuments(criteria()),
+        Forex.countDocuments(criteria('converted')),
+        Forex.countDocuments(criteria('dnp')),
+        Forex.countDocuments(criteria('demo')),
+        Forex.countDocuments(criteria('busy')),
+        Forex.countDocuments(criteria('not interested')),
+        Forex.countDocuments(criteria('call me later')),
+        Forex.countDocuments(criteria('out of station')),
+        Forex.countDocuments(criteria('wrong number')),
+        Forex.countDocuments(criteria('dormants')),
+        Forex.countDocuments(criteria('emails'))
+    ]);
+
+    return { totalLeads, converted, dnp, demo, busy, notInterested, callMeLater, outOfStation, wrongNumber, dormant, emails };
+}
+
+exports.getTodayReportForAgent = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const start = new Date();
+        start.setHours(0, 0, 0, 0);
+        const end = new Date(start);
+        end.setDate(end.getDate() + 1);
+
+        const counts = await getCountsForRangeAndAgent({ $gte: start, $lt: end }, id);
+        res.json({ period: 'Today', date: start.toISOString().split('T')[0], agentId: id, ...counts });
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+};
+
+exports.getWeeklyReportForAgent = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const today = new Date();
+        const start = new Date(today);
+        start.setDate(today.getDate() - today.getDay());
+        start.setHours(0, 0, 0, 0);
+        const end = new Date(start);
+        end.setDate(start.getDate() + 7);
+
+        const counts = await getCountsForRangeAndAgent({ $gte: start, $lt: end }, id);
+        res.json({ period: 'This Week', startDate: start.toISOString().split('T')[0], endDate: end.toISOString().split('T')[0], agentId: id, ...counts });
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+};
+
+exports.getMonthlyReportForAgent = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const today = new Date();
+        const start = new Date(today.getFullYear(), today.getMonth(), 1);
+        const end = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+
+        const counts = await getCountsForRangeAndAgent({ $gte: start, $lt: end }, id);
+        res.json({ period: 'This Month', month: start.toLocaleString('default', { month: 'long' }), year: start.getFullYear(), agentId: id, ...counts });
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+};
+
+exports.getYearlyReportForAgent = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const today = new Date();
+        const start = new Date(today.getFullYear(), 0, 1);
+        const end = new Date(today.getFullYear(), 11, 31, 23, 59, 59, 999);
+
+        const counts = await getCountsForRangeAndAgent({ $gte: start, $lt: end }, id);
+        res.json({ period: 'This Year', year: start.getFullYear(), agentId: id, ...counts });
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
 }; 

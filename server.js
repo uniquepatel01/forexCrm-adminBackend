@@ -12,6 +12,8 @@ const uploadRoutes = require('./routes/uploadRoute')
 const clientsRoute = require('./routes/clientsRoute')
 
 dotenv.config();
+console.log("JWT_SECRET from .env:", process.env.JWT_SECRET);
+
 connectDB();
 
 
@@ -36,7 +38,7 @@ app.use('/api/clients', clientsRoute)
 app.use('/api/reports', reportRoutes);
 app.use('/api/upload', uploadRoutes);
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
