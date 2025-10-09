@@ -9,7 +9,11 @@ const {
     getTodayReportForAgent,
     getWeeklyReportForAgent,
     getMonthlyReportForAgent,
-    getYearlyReportForAgent
+    getYearlyReportForAgent,
+    getTodayAgentLeads,
+    getWeeklyAgentLeads,
+    getMonthlyAgentLeadsByWeek,
+    getYearlyAgentLeadsByMonth
 } = require('../controllers/reportController');
 
 router.get('/today', protectAdmin, getTodayReport);
@@ -22,5 +26,11 @@ router.get('/today/agent/:id', protectAdmin, getTodayReportForAgent);
 router.get('/weekly/agent/:id', protectAdmin, getWeeklyReportForAgent);
 router.get('/monthly/agent/:id', protectAdmin, getMonthlyReportForAgent);
 router.get('/yearly/agent/:id', protectAdmin, getYearlyReportForAgent);
+
+// Agent detailed leads (admin-only)
+router.get('/today/agent/:id/leads', protectAdmin, getTodayAgentLeads);
+router.get('/weekly/agent/:id/leads', protectAdmin, getWeeklyAgentLeads);
+router.get('/monthly/agent/:id/leads', protectAdmin, getMonthlyAgentLeadsByWeek);
+router.get('/yearly/agent/:id/leads', protectAdmin, getYearlyAgentLeadsByMonth);
 
 module.exports = router; 

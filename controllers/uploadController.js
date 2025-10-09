@@ -1,7 +1,7 @@
 const multer = require('multer');
 const csv = require('csv-parser');
 const fs = require('fs');
-const Forex = require('../models/forex');
+const Forex = require('../models/crmModel');
 
 // Configure multer for file upload
 const storage = multer.diskStorage({
@@ -54,7 +54,7 @@ exports.uploadCSV = async (req, res) => {
                         try {
                             // Map CSV columns to model fields
                             const forexData = {
-                                Company_name: row.Company_name || row['Company Name'] || '',
+                                Company_name: row.Company_name || row['Company_name'] || '',
                                 Business_vol_Lakh_Per_Year: row.Business_vol_Lakh_Per_Year || row['Business Volume'] || '',
                                 Address: row.Address || '',
                                 City: row.City || '',
@@ -73,7 +73,7 @@ exports.uploadCSV = async (req, res) => {
 
                             // Validate required fields
                             if (!forexData.Company_name || !forexData.Mobile_no) {
-                                errors.push(`Row ${i + 1}: Missing required fields (Company name or Mobile number)`);
+                                errors.push(`Row ${i + 1}: Missing required fields (Company_name or Mobile number)`);
                                 errorCount++;
                                 continue;
                             }

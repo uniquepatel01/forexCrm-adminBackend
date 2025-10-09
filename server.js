@@ -1,46 +1,63 @@
-const express = require('express');
-const dotenv = require('dotenv');
-const cors = require('cors');
-const connectDB = require('./config/db')
+const express = require("express");
+const dotenv = require("dotenv");
+const cors = require("cors");
+const { connectMainDB } = require("./config/mainDb");
+const { connectCRM } = require("./config/crmConnection");
 
-const adminRoutes = require('./routes/adminRoute')
-const agentRoutes = require('./routes/agentRoute')
-const forexRoutes = require('./routes/forexRoute')
-const dashboardRoutes = require('./routes/dashboardRoute')
-const reportRoutes = require('./routes/reportRoute')
-const uploadRoutes = require('./routes/uploadRoute')
-const clientsRoute = require('./routes/clientsRoute')
+
+
+// Routes
+const adminRoutes = require("./routes/adminRoute");
+const agentRoutes = require("./routes/agentRoute");
+const dashboardRoutes = require("./routes/dashboardRoute");
+const reportRoutes = require("./routes/reportRoute");
+const uploadRoutes = require("./routes/uploadRoute");
+const clientsRoute = require("./routes/clientsRoute");
+const apkRoutes = require("./approutes/apkRoutes");
+const superAdminRoute = require("./routes/superAdminRouter");
+const crmRoutes = require("./routes/crmRoutes")
 
 dotenv.config();
-console.log("JWT_SECRET from .env:", process.env.JWT_SECRET);
-
-connectDB();
-
-
-
 const app = express();
-app.use(cors());
+const PORT = process.env.PORT || 2000;
+
+app.use(cors({ origin: ["*", "http://localhost:5173", "http://localhost:2000", "https://crm-admin-frontend-seven.vercel.app"], credentials: true }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Base route
+app.get("/", (req, res) => res.send("Welcome to the Dynamic Multi-CRM API!"));
 
-// All Routes are there 
-app.get('/', (req, res) => {
-  res.send('Welcome to the API!');
-});
-
-app.use('/api/admin', adminRoutes);
-
-app.use('/api/agent', agentRoutes);
-app.use('/api/forex', forexRoutes);
-app.use('/api/dashboard', dashboardRoutes);
-app.use('/api/clients', clientsRoute)
-app.use('/api/reports', reportRoutes);
-app.use('/api/upload', uploadRoutes);
-
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-});
+// Attach existing routes
+app.use("/api/admin", adminRoutes);
+app.use("/api/agent", agentRoutes);
+app.use("/api/dashboard", dashboardRoutes);
+app.use("/api/clients", clientsRoute);
+app.use("/api/crm", crmRoutes)
+app.use("/api/reports", reportRoutes);
+app.use("/api/upload", uploadRoutes);
+app.use("/apk", apkRoutes);
+app.use("/api",superAdminRoute);
 
 
+
+// Async init
+(async () => {
+  try {
+    // 1️⃣ Connect main DB
+    await connectMainDB(process.env.MAIN_DB_URI);
+    console.log(`✅ Main DB connected: ${process.env.MAIN_DB_URI}`);
+
+    // 2️⃣ Connect all CRMs
+    await connectCRM("forex", process.env.FOREX_URI);
+    await connectCRM("gold", process.env.GOLD_URI);
+
+    // 3️⃣ Start server
+    app.listen(PORT, "0.0.0.0", () => {
+      console.log(`🚀 Server running on port ${PORT}`);
+    });
+  } catch (err) {
+    console.error("❌ Failed to connect Main DB or CRMs:", err.message);
+    process.exit(1);
+  }
+})();

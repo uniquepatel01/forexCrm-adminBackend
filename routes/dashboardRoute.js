@@ -1,17 +1,11 @@
 const express = require('express');
 const router = express.Router();
 const { protectAdmin } = require('../middlewares/authMiddleware');
-const {
-    getTotalBusy, 
-    getTotalConverted,
-    getTotalDnp,
-    getTotalDemo
-} = require('../controllers/dashboardController');
+const {getDashboardData, getDashboardConverted, getDashboardDemo} = require('../controllers/dashboardController');
 
-router.get('/total-busy', protectAdmin, getTotalBusy);
-router.get('/total-converted', protectAdmin, getTotalConverted);
-router.get('/total-dnp', protectAdmin,getTotalDnp );
-router.get('/total-demo', protectAdmin, getTotalDemo)
+router.get('/dashboard-data', protectAdmin, getDashboardData);
+router.get('/dashboard-converted', protectAdmin, getDashboardConverted);
+router.get('/dashboard-demo', protectAdmin, getDashboardDemo)
 
 
 module.exports = router;

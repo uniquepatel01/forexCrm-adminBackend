@@ -3,17 +3,16 @@ const { getMainConnection } = require("../config/mainDb");
 
 
 
-const adminSchema = new mongoose.Schema({
+const superAdminSchema = new mongoose.Schema({
     name: String,
     email: { type: String, unique: true },
     mobile: Number,
     password: String,
-    crmKey: { type: String, required: true }, // forex, gold, etc.
     tokenVersion: { type: Number, default: 0 },
-    role: { type: String, default: "admin" }
+    role: { type: String, default: "superadmin" }
 });
 
 module.exports = () => {
-  const conn = getMainConnection();   
-  return conn.models.Admin || conn.model("Admin", adminSchema);
+  const conn = getMainConnection(); 
+  return conn.models.SuperAdmin || conn.model("SuperAdmin", superAdminSchema);
 };

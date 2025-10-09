@@ -1,39 +1,40 @@
 const express = require("express");
 const router = express.Router();
-const { loginAgent, updateAgentProfile, registerAgent, blockAgent, unblockAgent, trashAgent, getTrashedAgents, fetchLeadForAgent, getAgentLeads, getMyLeads, getAllAgent, getAgent } = require("../controllers/agentController");
-const { protectAgent, protectAdmin } = require("../middlewares/authMiddleware");
+const { loginAgent, updateAgentProfile, registerAgent, blockAgent, unblockAgent, trashAgent, getTrashedAgents, fetchLeadForAgent, getAgentLeads, getMyLeads, getAllAgent, getAgent, getBlockAgent } = require("../controllers/agentController");
+const { protectAgent, protectAdmin, protectUser } = require("../middlewares/authMiddleware");
 
 // Agent registration
-router.post("/register", registerAgent);
+router.post("/register",protectAdmin, registerAgent);
 
 // Agent login
 router.post("/login", loginAgent);
 
 // Update agent profile (protected)
-router.put("/profile", protectAgent, updateAgentProfile);
+router.put("/update", protectUser, updateAgentProfile);
+router.put ("/update/:id", protectUser, updateAgentProfile )
 
 // Block/unblock agent (admin only)
 router.put('/:id/block', protectAdmin, blockAgent);
 router.put('/:id/unblock', protectAdmin, unblockAgent);
+router.get('/block', protectAdmin, getBlockAgent)
 
 // Trash bin actions (admin only)
 router.put('/:id/trash', protectAdmin, trashAgent);
 router.get('/trash', protectAdmin, getTrashedAgents);
 
-// Fetch a lead for the authenticated agent
-router.post('/fetch-lead', protectAgent, fetchLeadForAgent);
 
-// Get my assigned leads (agent)
+
+// Get my assigned leads (agent) /// solver later for protect side to join database 
 router.get('/my-leads', protectAgent, getMyLeads);
 
 // Admin: Get all leads of a specific agent
 router.get('/:id/leads', protectAdmin, getAgentLeads);
 
 // Get all Agent
-router.get('/allagent',getAllAgent )
+router.get('/allagent', protectAdmin,getAllAgent )
 
 // get specific agent
 
-router.get('/:id', getAgent)
+router.get('/:id',protectUser, getAgent)
 
 module.exports = router;
