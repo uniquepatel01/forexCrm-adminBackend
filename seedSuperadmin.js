@@ -27,7 +27,7 @@ const SuperAdmin = require("./models/SuperAdmin"); // this is a function
     console.log("✅ SuperAdmin created:", superAdmin.email, superAdmin.role);
     process.exit(0);
   } catch (err) {
-    console.error("❌ Error seeding SuperAdmin:", err);
+    console.error(" Error seeding SuperAdmin:", err);
     process.exit(1);
   }
 })();

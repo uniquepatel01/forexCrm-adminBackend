@@ -54,10 +54,10 @@ app.use("/api",superAdminRoute);
 
     // 3️⃣ Start server
     app.listen(PORT, "0.0.0.0", () => {
-      console.log(`🚀 Server running on port ${PORT}`);
+      console.log(`Server running on port ${PORT}`);
     });
   } catch (err) {
-    console.error("❌ Failed to connect Main DB or CRMs:", err.message);
+    console.error("Failed to connect Main DB or CRMs:", err.message);
     process.exit(1);
   }
 })();

@@ -56,7 +56,7 @@ exports.fetchLead = async (req, res) => {
 
     res.status(200).json({ assignedLead: lead });
   } catch (error) {
-    console.error("🔥 fetchLead error:", error);
+    console.error("fetchLead error:", error);
     res.status(500).json({ message: error.message });
   }
 };
