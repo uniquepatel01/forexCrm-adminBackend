@@ -18,8 +18,8 @@ const SuperAdmin = require("./models/SuperAdmin"); // this is a function
     const hashedPassword = await bcrypt.hash("superpassword", 10);
 
     const superAdmin = await SuperAdminModel.create({
-      name: "Super Admin",
-      email: "superadmin@example.com",
+      name: "SuperAdmin",
+      email: "superadmin@mail.com",
       mobile: 8877609356,
       password: hashedPassword,
     });
