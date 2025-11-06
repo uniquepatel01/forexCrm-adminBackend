@@ -20,7 +20,7 @@ const SuperAdmin = require("./models/SuperAdmin"); // this is a function
     const superAdmin = await SuperAdminModel.create({
       name: "Super Admin",
       email: "superadmin@example.com",
-      mobile: 1234567890,
+      mobile: 8877609356,
       password: hashedPassword,
     });
 
