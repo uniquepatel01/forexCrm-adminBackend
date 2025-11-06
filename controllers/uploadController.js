@@ -1,22 +1,35 @@
 const multer = require('multer');
 const csv = require('csv-parser');
 const fs = require('fs');
+const path = require('path');
 const Forex = require('../models/crmModel');
+
+// Use a stable uploads directory (absolute path) and ensure it exists
+const uploadDir = path.join(__dirname, '..', 'uploads');
+if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir, { recursive: true });
+}
 
 // Configure multer for file upload
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
-        cb(null, 'uploads/');
+        cb(null, uploadDir);
     },
     filename: function (req, file, cb) {
-        cb(null, Date.now() + '-' + file.originalname);
+        // sanitize original name and avoid directory traversal
+        const base = path.basename(file.originalname);
+        const safe = Date.now() + '-' + base.replace(/\s+/g, '_');
+        cb(null, safe);
     }
 });
 
 const upload = multer({
     storage: storage,
     fileFilter: (req, file, cb) => {
-        if (file.mimetype === 'text/csv' || file.originalname.endsWith('.csv')) {
+        const ext = path.extname(file.originalname || '').toLowerCase();
+        const mime = (file.mimetype || '').toLowerCase();
+        // Accept common CSV mime-types and .csv extension (case-insensitive)
+        if (mime === 'text/csv' || mime === 'application/vnd.ms-excel' || ext === '.csv') {
             cb(null, true);
         } else {
             cb(new Error('Only CSV files are allowed'), false);
@@ -96,8 +109,12 @@ exports.uploadCSV = async (req, res) => {
                         }
                     }
 
-                    // Clean up uploaded file
-                    fs.unlinkSync(req.file.path);
+                    // Clean up uploaded file (best-effort)
+                    try {
+                        fs.unlinkSync(req.file.path);
+                    } catch (e) {
+                        console.error('Failed to remove uploaded file:', e.message);
+                    }
 
                     res.json({
                         message: 'CSV upload completed',
@@ -109,16 +126,24 @@ exports.uploadCSV = async (req, res) => {
 
                 } catch (error) {
                     // Clean up uploaded file on error
-                    if (fs.existsSync(req.file.path)) {
-                        fs.unlinkSync(req.file.path);
+                    try {
+                        if (fs.existsSync(req.file.path)) {
+                            fs.unlinkSync(req.file.path);
+                        }
+                    } catch (e) {
+                        console.error('Failed to remove uploaded file after error:', e.message);
                     }
                     res.status(500).json({ message: 'Error processing CSV file', error: error.message });
                 }
             })
             .on('error', (error) => {
-                // Clean up uploaded file on error
-                if (fs.existsSync(req.file.path)) {
-                    fs.unlinkSync(req.file.path);
+                // Clean up uploaded file on error (best-effort)
+                try {
+                    if (req.file && fs.existsSync(req.file.path)) {
+                        fs.unlinkSync(req.file.path);
+                    }
+                } catch (e) {
+                    console.error('Failed to remove uploaded file after read error:', e.message);
                 }
                 res.status(500).json({ message: 'Error reading CSV file', error: error.message });
             });
