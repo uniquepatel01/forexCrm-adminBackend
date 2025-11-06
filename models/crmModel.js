@@ -31,4 +31,8 @@ const crmSchema = new mongoose.Schema({
   source: { type: String, default: "" },
 });
 
+// Ensure a unique index on Mobile_no to prevent duplicates at the DB level.
+// Note: adding `unique: true` here helps Mongoose create the index if autoIndex is enabled.
+crmSchema.index({ Mobile_no: 1 }, { unique: true });
+
 module.exports = crmSchema;

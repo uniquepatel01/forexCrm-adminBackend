@@ -2,7 +2,6 @@ const multer = require('multer');
 const csv = require('csv-parser');
 const fs = require('fs');
 const path = require('path');
-const Forex = require('../models/crmModel');
 
 // Use a stable uploads directory (absolute path) and ensure it exists
 const uploadDir = path.join(__dirname, '..', 'uploads');
@@ -45,6 +44,13 @@ exports.uploadCSV = async (req, res) => {
     try {
         if (!req.file) {
             return res.status(400).json({ message: 'Please upload a CSV file' });
+        }
+
+        // The per-CRM model is attached by `protectAdmin` middleware as `req.CRMModel`.
+        // Use that instead of requiring the schema directly so uploads go to the correct DB.
+        const Forex = req.CRMModel;
+        if (!Forex) {
+            return res.status(500).json({ message: 'CRM model not available on request' });
         }
 
         const results = [];
@@ -91,7 +97,10 @@ exports.uploadCSV = async (req, res) => {
                                 continue;
                             }
 
-                            // Check for duplicate mobile number
+                            // Normalize mobile number to reduce accidental duplicates (trim, remove spaces)
+                            forexData.Mobile_no = (forexData.Mobile_no || '').toString().trim().replace(/\s+/g, '');
+
+                            // Check for duplicate mobile number (quick check)
                             const existing = await Forex.findOne({ Mobile_no: forexData.Mobile_no });
                             if (existing) {
                                 errors.push(`Row ${i + 1}: Mobile number ${forexData.Mobile_no} already exists`);
@@ -99,9 +108,23 @@ exports.uploadCSV = async (req, res) => {
                                 continue;
                             }
 
-                            // Save to database
-                            await Forex.create(forexData);
-                            successCount++;
+                            // Save to database. Wrap to catch duplicate-key race conditions (E11000).
+                            try {
+                                await Forex.create(forexData);
+                                successCount++;
+                            } catch (dbErr) {
+                                // Handle duplicate key error (race condition or index enforcement)
+                                const isDuplicate =
+                                    (dbErr && dbErr.code === 11000) ||
+                                    (dbErr && dbErr.name === 'MongoServerError' && dbErr.code === 11000);
+                                if (isDuplicate) {
+                                    errors.push(`Row ${i + 1}: Mobile number ${forexData.Mobile_no} already exists (duplicate)`);
+                                    errorCount++;
+                                    continue;
+                                }
+                                // Other DB errors bubble up to outer catch for row-level logging
+                                throw dbErr;
+                            }
 
                         } catch (error) {
                             errors.push(`Row ${i + 1}: ${error.message}`);
